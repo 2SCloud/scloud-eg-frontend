@@ -4,7 +4,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Cell,
 } from 'recharts'
-import type { ErrorMetrics } from '@/types/api'
+import type { ErrorMetrics } from '@/lib/api'
 import { format } from 'date-fns'
 
 interface ErrorChartProps {
@@ -22,9 +22,9 @@ const TOOLTIP = {
 }
 
 function barColor(rate: number) {
-  if (rate > 5)  return '#f472b6'  // hot pink — critical
-  if (rate > 2)  return '#818cf8'  // indigo  — warning
-  return '#38bdf8'                  // sky     — ok
+  if (rate > 5)  return '#f472b6'
+  if (rate > 2)  return '#818cf8'
+  return '#38bdf8'
 }
 
 export function ErrorChart({ data }: ErrorChartProps) {

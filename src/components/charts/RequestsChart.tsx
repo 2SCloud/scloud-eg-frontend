@@ -4,7 +4,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
-import type { RequestMetrics } from '@/types/api'
+import type { RequestMetrics } from '@/lib/api'
 import { format } from 'date-fns'
 
 interface RequestsChartProps {
