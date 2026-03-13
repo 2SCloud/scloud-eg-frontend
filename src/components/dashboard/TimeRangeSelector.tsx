@@ -1,7 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import type { TimeRange } from '@/types/api'
+import type { TimeRange } from '@/lib/api'
 
 const RANGES: { value: TimeRange; label: string }[] = [
   { value: '1h',  label: '1H' },

@@ -1,7 +1,7 @@
 import type {
   DashboardData, RequestMetrics, ErrorMetrics,
   RouteMetrics, StatusCodeDistribution, GatewayStats, TimeRange,
-} from '@/types/api'
+} from '@/lib/api'
 
 function rand(min: number, max: number) { return Math.random() * (max - min) + min }
 function randInt(min: number, max: number) { return Math.floor(rand(min, max)) }
