@@ -91,7 +91,7 @@ export function RequestsChart({ data, view }: RequestsChartProps) {
         <CartesianGrid strokeDasharray="4 4" stroke="#0a1929" vertical={false} />
         <XAxis dataKey="time" {...axisProps} interval="preserveStartEnd" />
         <YAxis {...axisProps} unit="ms" />
-        <Tooltip contentStyle={TOOLTIP} labelStyle={{ color: '#475569' }} formatter={(v: number) => [`${v}ms`]} />
+        <Tooltip contentStyle={TOOLTIP} labelStyle={{ color: '#475569' }} formatter={(v) => [`${Number(v ?? 0)}ms`]} />
         <Legend wrapperStyle={{ fontFamily: 'JetBrains Mono', fontSize: 10, color: '#334155' }} />
         <Area type="monotone" dataKey="latencyP50" name="p50" stroke="#38bdf8" strokeWidth={1.5} fill="url(#p50g)" dot={false} />
         <Area type="monotone" dataKey="latencyP95" name="p95" stroke="#818cf8" strokeWidth={1.5} fill="url(#p95g)" dot={false} />
