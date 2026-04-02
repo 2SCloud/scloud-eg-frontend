@@ -1,6 +1,7 @@
 import type {
   DashboardData, RequestMetrics, ErrorMetrics,
   RouteMetrics, StatusCodeDistribution, GatewayStats, TimeRange,
+  WafRule, GatewayModule, RateLimitConfig, RequestLog,
 } from '@/lib/api'
 
 function rand(min: number, max: number) { return Math.random() * (max - min) + min }
@@ -111,4 +112,175 @@ export function generateDashboardData(range: TimeRange = '24h'): DashboardData {
     topRoutes: generateTopRoutes(),
     statusDistribution: generateStatusDistribution(),
   }
+}
+
+// ─── WAF rules ────────────────────────────────────────────────────────────────
+
+export function generateWafRules(): WafRule[] {
+  return [
+    {
+      id: 'path-traversal',
+      description: 'Block path traversal attempts',
+      enabled: true,
+      type: 'path_contains',
+      values: ['../', '..\\', '%2e%2e%2f', '%2e%2e/'],
+      action: 'block',
+    },
+    {
+      id: 'admin-path',
+      description: 'Block access to admin endpoints',
+      enabled: true,
+      type: 'path_prefix',
+      values: ['/admin', '/_admin', '/wp-admin', '/phpmyadmin'],
+      action: 'block',
+    },
+    {
+      id: 'xss-basic',
+      description: 'Block basic XSS patterns in path',
+      enabled: true,
+      type: 'regex',
+      values: ['<script', 'javascript:', 'onerror=', 'onload='],
+      action: 'block',
+    },
+    {
+      id: 'sql-injection-basic',
+      description: 'Block common SQL injection patterns',
+      enabled: false,
+      type: 'path_contains',
+      values: ["' OR '", 'UNION SELECT', 'DROP TABLE', '--'],
+      action: 'block',
+    },
+  ]
+}
+
+// ─── Modules ──────────────────────────────────────────────────────────────────
+
+export function generateModules(): GatewayModule[] {
+  return [
+    {
+      id: 'waf',
+      name: 'WAF',
+      enabled: true,
+      status: 'healthy',
+      route: '/wasm/waf.wasm',
+      timeout_ms: 50,
+      config_mode: 'init',
+      version: '1.2.0',
+    },
+    {
+      id: 'ratelimit',
+      name: 'Rate Limiter',
+      enabled: true,
+      status: 'healthy',
+      route: '/wasm/ratelimit.wasm',
+      timeout_ms: 10,
+      config_mode: 'inline',
+      version: '1.0.3',
+    },
+    {
+      id: 'firewall',
+      name: 'Firewall',
+      enabled: false,
+      status: 'disabled',
+      route: '/wasm/firewall.wasm',
+      timeout_ms: 25,
+      config_mode: 'init',
+      version: '0.9.1',
+    },
+  ]
+}
+
+// ─── Rate limit ───────────────────────────────────────────────────────────────
+
+export function generateRateLimitConfig(): RateLimitConfig {
+  return {
+    max_requests: 100,
+    window_seconds: 30,
+  }
+}
+
+// ─── Logs ─────────────────────────────────────────────────────────────────────
+
+const BLOCKED_PATHS = [
+  { path: '/../etc/passwd', reason: 'path-traversal' },
+  { path: '/../../windows/system32', reason: 'path-traversal' },
+  { path: '/admin/dashboard', reason: 'admin-path' },
+  { path: '/wp-admin/login', reason: 'admin-path' },
+  { path: '/_admin/config', reason: 'admin-path' },
+  { path: '/api/v1/users?id=1 UNION SELECT', reason: 'sql-injection-basic' },
+  { path: '/search?q=<script>alert(1)</script>', reason: 'xss-basic' },
+  { path: '/api/data?filter=1%27+OR+%271%27=%271', reason: 'sql-injection-basic' },
+]
+
+const ALLOWED_PATHS = [
+  { path: '/api/v1/auth/login', reason: 'allowed' },
+  { path: '/api/v1/users/42', reason: 'allowed' },
+  { path: '/api/v1/products', reason: 'allowed' },
+  { path: '/api/v1/orders', reason: 'allowed' },
+  { path: '/api/v1/payments/process', reason: 'allowed' },
+  { path: '/api/v1/search?q=laptop', reason: 'allowed' },
+  { path: '/api/v1/notifications', reason: 'allowed' },
+  { path: '/api/v1/files/upload', reason: 'allowed' },
+  { path: '/api/v1/webhooks/stripe', reason: 'allowed' },
+  { path: '/health', reason: 'allowed' },
+]
+
+const IPS = [
+  '203.0.113.42', '198.51.100.7', '192.0.2.155', '10.0.0.23',
+  '172.16.0.88', '185.220.101.45', '91.108.4.12', '45.33.32.156',
+  '104.244.42.129', '162.158.78.90',
+]
+
+const METHODS: RequestLog['method'][] = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS']
+
+function randomIp() { return IPS[randInt(0, IPS.length)] }
+function randomMethod(): RequestLog['method'] { return METHODS[randInt(0, METHODS.length)] }
+
+function generateLog(index: number, offsetMs: number): RequestLog {
+  const isBlock = Math.random() < 0.3
+  const entry = isBlock
+    ? BLOCKED_PATHS[randInt(0, BLOCKED_PATHS.length)]
+    : ALLOWED_PATHS[randInt(0, ALLOWED_PATHS.length)]
+
+  const statusCode = isBlock
+    ? 403
+    : [200, 200, 200, 201, 204, 301, 400, 404, 500][randInt(0, 9)]
+
+  const latency = isBlock
+    ? randInt(2, 15)
+    : randInt(10, 850)
+
+  return {
+    id: `log-${Date.now()}-${index}`,
+    timestamp: new Date(Date.now() - offsetMs).toISOString(),
+    ip: randomIp(),
+    method: randomMethod(),
+    path: entry.path,
+    decision: isBlock ? 'block' : 'allow',
+    reason: entry.reason,
+    status_code: statusCode,
+    latency_ms: latency,
+  }
+}
+
+export function generateLogs(
+  filter: 'all' | 'block' | 'allow',
+  limit: number,
+): RequestLog[] {
+  // Generate ~50 base logs spread over last 10 minutes
+  const total = 50
+  const logs: RequestLog[] = Array.from({ length: total }, (_, i) =>
+    generateLog(i, randInt(0, 600_000))
+  )
+
+  // Sort newest first
+  const sorted = logs.sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+  )
+
+  const filtered = filter === 'all'
+    ? sorted
+    : sorted.filter(l => l.decision === filter)
+
+  return filtered.slice(0, limit)
 }
