@@ -59,8 +59,8 @@ export function StatusDonut({ data }: StatusDonutProps) {
             </Pie>
             <Tooltip
               contentStyle={TOOLTIP}
-              formatter={(v: number, _, props) => [
-                `${v.toLocaleString()} · ${props.payload.percentage}%`,
+              formatter={(v, _, props) => [
+                `${Number(v ?? 0).toLocaleString()} · ${props.payload.percentage}%`,
                 `HTTP ${props.payload.code}`,
               ]}
             />

@@ -59,7 +59,7 @@ export function ErrorChart({ data }: ErrorChartProps) {
         <Tooltip
           contentStyle={TOOLTIP}
           labelStyle={{ color: '#475569' }}
-          formatter={(v: number) => [`${v}%`, 'error rate']}
+          formatter={(v) => [`${Number(v ?? 0)}%`, 'error rate']}
         />
         <Bar dataKey="errorRate" radius={[2, 2, 0, 0]} filter="url(#barGlow)">
           {chartData.map((entry, i) => (
