@@ -64,7 +64,6 @@ export function DashboardClient() {
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState<LatencyView>('rps')
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
-  const [tick, setTick] = useState(0)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -81,165 +80,132 @@ export function DashboardClient() {
 
   // Auto-refresh 30s
   useEffect(() => {
-    const id = setInterval(() => { load(); setTick(t => t + 1) }, 30_000)
+    const id = setInterval(() => { load() }, 30_000)
     return () => clearInterval(id)
   }, [load])
 
   return (
-    <div className="relative min-h-screen bg-[#030712] grid-bg">
+    <div className="min-h-screen bg-[#030712] grid-bg p-8">
 
-      {/* Top neon line */}
-      <div
-        className="pointer-events-none fixed top-0 left-0 right-0 h-px z-50"
-        style={{
-          background: 'linear-gradient(to right, transparent, #38bdf8 30%, #818cf8 60%, transparent)',
-          boxShadow: '0 0 12px rgba(56,189,248,0.6)',
-        }}
-      />
-
-      <div className="relative z-10 mx-auto max-w-[1400px] px-6 py-8">
-
-        {/* ── Header ─────────────────────────────────────────── */}
-        <div className="fade-up mb-8 flex items-start justify-between">
-          <div>
-            <div className="flex items-center gap-3 mb-1">
-              {/* Pulsing dot */}
-              <span className="relative flex h-2 w-2">
-                <span
-                  className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-60"
-                  style={{ backgroundColor: '#38bdf8' }}
-                />
-                <span
-                  className="relative inline-flex h-2 w-2 rounded-full"
-                  style={{ backgroundColor: '#38bdf8', boxShadow: '0 0 8px rgba(56,189,248,0.9)' }}
-                />
-              </span>
-              <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-sky-900/70">
-                2scloud
-              </span>
-              <span className="font-mono text-[10px] text-sky-900/30">/</span>
-              <h1
-                className="font-mono text-sm font-bold uppercase tracking-[0.2em] text-sky-300"
-                style={{ textShadow: '0 0 16px rgba(56,189,248,0.4)' }}
-              >
-                edge-gateway
-              </h1>
-            </div>
-            <p className="font-mono text-[10px] text-sky-900/40 ml-5">
-              {lastUpdated
-                ? `↻ ${lastUpdated.toLocaleTimeString()} · auto-refresh 30s`
-                : 'initializing…'
-              }
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={load}
-              disabled={loading}
-              className={cn(
-                'rounded border border-[#0f2040] bg-[#070d19] px-3 py-1.5',
-                'font-mono text-[11px] text-sky-900/60 transition-all duration-200',
-                'hover:border-sky-800/40 hover:text-sky-400 disabled:opacity-30',
-              )}
-              style={loading ? undefined : { boxShadow: 'none' }}
-            >
-              {loading ? '⟳ syncing' : '⟳ refresh'}
-            </button>
-            <TimeRangeSelector value={range} onChange={setRange} />
-          </div>
-        </div>
-
-        {/* ── Stat cards ──────────────────────────────────────── */}
-        <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <StatCard
-            label="Total Requests"
-            value={data ? data.stats.totalRequests.toLocaleString() : '—'}
-            delta={data?.stats.totalRequestsDelta}
-            accent index={0}
-          />
-          <StatCard
-            label="Avg Latency"
-            value={data ? `${data.stats.avgLatency}ms` : '—'}
-            delta={data?.stats.avgLatencyDelta}
-            index={1}
-          />
-          <StatCard
-            label="Error Rate"
-            value={data ? `${data.stats.errorRate}%` : '—'}
-            delta={data?.stats.errorRateDelta}
-            index={2}
-          />
-          <StatCard
-            label="Uptime"
-            value={data ? formatUptime(data.stats.uptime) : '—'}
-            index={3}
-          />
-        </div>
-
-        {/* ── Charts row ──────────────────────────────────────── */}
-        <div className="mb-5 grid grid-cols-1 gap-3 lg:grid-cols-3">
-
-          {/* Requests / Latency (2 cols) */}
-          <Panel className="lg:col-span-2" delay={0.2}>
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="font-mono text-[10px] uppercase tracking-[0.2em] text-sky-900/70">
-                {view === 'rps' ? 'Requests / sec' : 'Latency percentiles'}
-              </h2>
-              <div className="flex overflow-hidden rounded border border-[#0f2040]">
-                {(['rps', 'latency'] as LatencyView[]).map(v => (
-                  <button
-                    key={v}
-                    onClick={() => setView(v)}
-                    className={cn(
-                      'px-3 py-1 font-mono text-[10px] uppercase tracking-widest transition-all duration-150',
-                      view === v ? 'bg-sky-500/10 text-sky-300' : 'text-sky-900/40 hover:text-sky-700 bg-transparent',
-                    )}
-                    style={view === v ? { boxShadow: 'inset 0 0 8px rgba(56,189,248,0.06)' } : undefined}
-                  >
-                    {v}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {data
-              ? <RequestsChart data={data.requestMetrics} view={view} />
-              : <div className="h-[230px]"><Skeleton /></div>
+      {/* ── Header ─────────────────────────────────────────── */}
+      <div className="fade-up mb-8 flex items-start justify-between">
+        <div>
+          <h1 className="font-mono text-lg font-bold text-sky-300 neon-sky uppercase tracking-widest">
+            Overview
+          </h1>
+          <p className="font-mono text-[11px] text-sky-900/60 mt-1">
+            {lastUpdated
+              ? `↻ ${lastUpdated.toLocaleTimeString()} · auto-refresh 30s`
+              : 'initializing…'
             }
-          </Panel>
-
-          {/* Status donut */}
-          <Panel title="Status distribution" delay={0.25}>
-            <div className="flex items-center justify-center h-[230px]">
-              {data
-                ? <StatusDonut data={data.statusDistribution} />
-                : <Skeleton />
-              }
-            </div>
-          </Panel>
+          </p>
         </div>
 
-        {/* ── Error rate ──────────────────────────────────────── */}
-        <Panel title="Error rate %" className="mb-5" delay={0.3}>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={load}
+            disabled={loading}
+            className={cn(
+              'rounded border border-[#0f2040] bg-[#070d19] px-3 py-1.5',
+              'font-mono text-[11px] text-sky-900/60 transition-all duration-200',
+              'hover:border-sky-800/40 hover:text-sky-400 disabled:opacity-30',
+            )}
+          >
+            {loading ? '⟳ syncing' : '⟳ refresh'}
+          </button>
+          <TimeRangeSelector value={range} onChange={setRange} />
+        </div>
+      </div>
+
+      {/* ── Stat cards ──────────────────────────────────────── */}
+      <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatCard
+          label="Total Requests"
+          value={data ? data.stats.totalRequests.toLocaleString() : '—'}
+          delta={data?.stats.totalRequestsDelta}
+          accent index={0}
+        />
+        <StatCard
+          label="Avg Latency"
+          value={data ? `${data.stats.avgLatency}ms` : '—'}
+          delta={data?.stats.avgLatencyDelta}
+          index={1}
+        />
+        <StatCard
+          label="Error Rate"
+          value={data ? `${data.stats.errorRate}%` : '—'}
+          delta={data?.stats.errorRateDelta}
+          index={2}
+        />
+        <StatCard
+          label="Uptime"
+          value={data ? formatUptime(data.stats.uptime) : '—'}
+          index={3}
+        />
+      </div>
+
+      {/* ── Charts row ──────────────────────────────────────── */}
+      <div className="mb-5 grid grid-cols-1 gap-3 lg:grid-cols-3">
+
+        {/* Requests / Latency (2 cols) */}
+        <Panel className="lg:col-span-2" delay={0.2}>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="font-mono text-[10px] uppercase tracking-[0.2em] text-sky-900/70">
+              {view === 'rps' ? 'Requests / sec' : 'Latency percentiles'}
+            </h2>
+            <div className="flex overflow-hidden rounded border border-[#0f2040]">
+              {(['rps', 'latency'] as LatencyView[]).map(v => (
+                <button
+                  key={v}
+                  onClick={() => setView(v)}
+                  className={cn(
+                    'px-3 py-1 font-mono text-[10px] uppercase tracking-widest transition-all duration-150',
+                    view === v ? 'bg-sky-500/10 text-sky-300' : 'text-sky-900/40 hover:text-sky-700 bg-transparent',
+                  )}
+                  style={view === v ? { boxShadow: 'inset 0 0 8px rgba(56,189,248,0.06)' } : undefined}
+                >
+                  {v}
+                </button>
+              ))}
+            </div>
+          </div>
           {data
-            ? <ErrorChart data={data.errorMetrics} />
+            ? <RequestsChart data={data.requestMetrics} view={view} />
             : <div className="h-[230px]"><Skeleton /></div>
           }
         </Panel>
 
-        {/* ── Routes table ────────────────────────────────────── */}
-        <Panel title="Top routes" delay={0.35}>
-          {data
-            ? <RoutesTable data={data.topRoutes} />
-            : <div className="h-[300px]"><Skeleton /></div>
-          }
+        {/* Status donut */}
+        <Panel title="Status distribution" delay={0.25}>
+          <div className="flex items-center justify-center h-[230px]">
+            {data
+              ? <StatusDonut data={data.statusDistribution} />
+              : <Skeleton />
+            }
+          </div>
         </Panel>
-
-        {/* Footer */}
-        <p className="mt-6 text-center font-mono text-[10px] text-sky-900/30 fade-up" style={{ animationDelay: '0.4s' }}>
-          2scloud edge-gateway · observability v0.1 · mock data
-        </p>
       </div>
+
+      {/* ── Error rate ──────────────────────────────────────── */}
+      <Panel title="Error rate %" className="mb-5" delay={0.3}>
+        {data
+          ? <ErrorChart data={data.errorMetrics} />
+          : <div className="h-[230px]"><Skeleton /></div>
+        }
+      </Panel>
+
+      {/* ── Routes table ────────────────────────────────────── */}
+      <Panel title="Top routes" delay={0.35}>
+        {data
+          ? <RoutesTable data={data.topRoutes} />
+          : <div className="h-[300px]"><Skeleton /></div>
+        }
+      </Panel>
+
+      {/* Footer */}
+      <p className="mt-6 text-center font-mono text-[10px] text-sky-900/30 fade-up" style={{ animationDelay: '0.4s' }}>
+        2scloud edge-gateway · observability v0.1 · mock data
+      </p>
     </div>
   )
 }

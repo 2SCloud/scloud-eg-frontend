@@ -1,7 +1,5 @@
-import { DashboardClient } from '@/components/dashboard/DashboardClient'
+import { redirect } from 'next/navigation'
 
-export const metadata = { title: 'Edge Gateway — Dashboard' }
-
-export default function DashboardPage() {
-  return <DashboardClient />
+export default function RootPage() {
+  redirect('/dashboard')
 }
