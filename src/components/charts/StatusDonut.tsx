@@ -1,13 +1,12 @@
 'use client'
 
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
-import type { StatusCodeDistribution } from '@/types/api'
+import type { StatusCodeDistribution } from '@/lib/api'
 
 interface StatusDonutProps {
   data: StatusCodeDistribution[]
 }
 
-// Sky-blue neon palette for status codes
 const COLORS: Record<string, { fill: string; glow: string; label: string }> = {
   '2xx': { fill: '#38bdf8', glow: 'rgba(56,189,248,0.5)',  label: 'sky' },
   '3xx': { fill: '#818cf8', glow: 'rgba(129,140,248,0.5)', label: 'indigo' },

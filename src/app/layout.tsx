@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { JetBrains_Mono } from 'next/font/google'
 import { AppShell } from '@/components/layout/AppShell'
 import './globals.css'
+import NavBar from "@/components/ui/navbar";
 
 const mono = JetBrains_Mono({
   subsets: ['latin'],
@@ -22,5 +23,5 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AppShell>{children}</AppShell>
       </body>
     </html>
-  )
+  );
 }

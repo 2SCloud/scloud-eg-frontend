@@ -1,7 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import type { RouteMetrics } from '@/types/api'
+import type { RouteMetrics } from '@/lib/api'
 
 interface RoutesTableProps {
   data: RouteMetrics[]

@@ -8,7 +8,7 @@ import { ErrorChart } from '@/components/charts/ErrorChart'
 import { StatusDonut } from '@/components/charts/StatusDonut'
 import { RoutesTable } from '@/components/dashboard/RoutesTable'
 import { getDashboardData } from '@/lib/api'
-import type { DashboardData, TimeRange } from '@/types/api'
+import type { DashboardData, TimeRange } from '@/lib/api'
 import { cn } from '@/lib/utils'
 
 function formatUptime(seconds: number) {
@@ -78,7 +78,6 @@ export function DashboardClient() {
 
   useEffect(() => { load() }, [load])
 
-  // Auto-refresh 30s
   useEffect(() => {
     const id = setInterval(() => { load() }, 30_000)
     return () => clearInterval(id)
