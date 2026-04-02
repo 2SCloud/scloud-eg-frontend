@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { JetBrains_Mono } from 'next/font/google'
+import { AppShell } from '@/components/layout/AppShell'
 import './globals.css'
-import NavBar from "@/components/ui/navbar";
 
 const mono = JetBrains_Mono({
   subsets: ['latin'],
@@ -12,16 +12,15 @@ const mono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: '2scloud — Edge Gateway',
-  description: 'API Gateway observability dashboard',
+  description: 'Edge Gateway admin dashboard',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={mono.variable}>
       <body className="scanlines antialiased">
-        <NavBar />
-        <main>{children}</main>
+        <AppShell>{children}</AppShell>
       </body>
     </html>
-  );
+  )
 }
