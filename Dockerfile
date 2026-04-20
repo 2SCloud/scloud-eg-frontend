@@ -9,7 +9,12 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-# NEXT_PUBLIC_API_URL is injected at runtime via env — leave empty at build time
+# NEXT_PUBLIC_* is baked into the client bundle at build time — must be the
+# URL the BROWSER will use to reach the admin API (port 9090, not 8080).
+# Override per-environment, e.g.
+#   docker build --build-arg NEXT_PUBLIC_API_URL=http://gateway.scloud.internal:9090 ./frontend
+ARG NEXT_PUBLIC_API_URL=http://localhost:9090
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 RUN npm run build
 
 # ── Stage 3: Production runner ────────────────────────────────────────────────

@@ -167,12 +167,16 @@ function ModuleCard({
 export default function ModulesPage() {
   const [modules, setModules] = useState<GatewayModule[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
+    setError(null)
     try {
       const data = await getModules()
       setModules(data)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to load modules')
     } finally {
       setLoading(false)
     }
@@ -228,6 +232,18 @@ export default function ModulesPage() {
               style={{ animationDelay: `${i * 0.1}s` }}
             />
           ))}
+        </div>
+      ) : error ? (
+        <div className="rounded border border-pink-500/40 bg-pink-500/5 px-4 py-6">
+          <p className="font-mono text-[11px] uppercase tracking-widest text-pink-300">
+            Failed to load modules
+          </p>
+          <p className="mt-2 font-mono text-[11px] text-pink-200/70 break-all">
+            {error}
+          </p>
+          <p className="mt-3 font-mono text-[10px] text-pink-200/40">
+            Check that the admin API at {process.env.NEXT_PUBLIC_API_URL ?? '(unset)'} is reachable.
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
