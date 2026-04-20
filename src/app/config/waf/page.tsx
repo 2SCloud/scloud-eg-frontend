@@ -252,15 +252,19 @@ export default function WafPage() {
   const [savedRules, setSavedRules] = useState<WafRule[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const hasChanges = JSON.stringify(rules) !== JSON.stringify(savedRules)
 
   const load = useCallback(async () => {
     setLoading(true)
+    setError(null)
     try {
       const data = await getWafRules()
       setRules(data)
       setSavedRules(data)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to load WAF rules')
     } finally {
       setLoading(false)
     }
@@ -354,6 +358,18 @@ export default function WafPage() {
         {loading ? (
           <div className="px-4 py-12 text-center">
             <span className="font-mono text-[11px] text-sky-900/40 animate-pulse">Loading rules…</span>
+          </div>
+        ) : error ? (
+          <div className="px-4 py-8">
+            <p className="font-mono text-[11px] uppercase tracking-widest text-pink-300">
+              Failed to load WAF rules
+            </p>
+            <p className="mt-2 font-mono text-[11px] text-pink-200/70 break-all">
+              {error}
+            </p>
+            <p className="mt-3 font-mono text-[10px] text-pink-200/40">
+              Check that the admin API at {process.env.NEXT_PUBLIC_API_URL ?? '(unset)'} is reachable.
+            </p>
           </div>
         ) : rules.length === 0 ? (
           <div className="px-4 py-12 text-center">
